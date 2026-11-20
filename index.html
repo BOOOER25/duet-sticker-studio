@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>双人素材工作室</title><meta name="color-scheme" content="light">
+  <link rel="stylesheet" href="./styles.css"><script type="module" src="./app.js"></script>
+</head>
+<body>
+  <header class="topbar"><a class="brand" href="./"><span class="brand-icon">m.</span><span>喵喵创作室<small>DUET STUDIO</small></span></a><div class="top-actions"><span id="save-state">准备中</span><button id="export-project" class="quiet">导出项目</button><button id="import-project" class="quiet">导入项目</button></div></header>
+  <main>
+    <section class="workspace-heading"><div><p class="eyebrow">MAKE A LITTLE STORY</p><h1 id="project-title"></h1><p id="project-subtitle"></p></div><span class="project-number" id="project-number"></span></section>
+    <div class="workspace">
+      <section class="preview-panel" aria-label="动画预览">
+        <div class="panel-title"><span><i class="dot"></i> 实时预览</span><span>9 : 16</span></div>
+        <div class="canvas-wrap"><canvas id="preview" width="1080" height="1920" role="img" aria-label="双人动画画面"></canvas><div id="record-badge" hidden>● 正在录制</div></div>
+        <div class="transport"><button id="play" class="play-button" aria-label="播放动画">▶</button><input id="seek" type="range" min="0" max="15" step=".01" aria-label="预览进度"><output id="clock">0.0 / 15.0 s</output></div>
+        <div class="preview-actions"><button id="save-png">保存当前画面</button><button id="save-receipt" hidden>保存完整小票</button><select id="resolution" aria-label="录制分辨率"><option value="720">720p</option><option value="1080">1080p</option></select><button id="record" class="primary">录制视频</button><button id="cancel-record" hidden>取消录制</button></div>
+        <p id="record-help" class="note"></p><div id="video-result" hidden><video id="result-player" controls playsinline></video><a id="video-download" class="download-link">下载录制视频</a></div>
+      </section>
+      <section class="editor-panel" aria-label="内容配置">
+        <nav class="tabs" aria-label="编辑内容"><button data-tab="scene" aria-selected="true">画面设置</button><button data-tab="orders" aria-selected="false">双方明细</button><button data-tab="assets" aria-selected="false">素材库</button></nav>
+        <div id="panel-scene" class="tab-panel">
+          <div class="section-label"><span>01</span><h2>先写下这段故事</h2></div>
+          <label>画面标题<input id="title" maxlength="48"></label><label>底部文案<input id="footer" maxlength="60"></label>
+          <div class="field-grid"><label>展示单位<select id="unit"><option value="元">消费金额 · 元</option><option value="大卡">热量 · 大卡</option><option value="次">次数 · 次</option></select></label><label>视频时长（秒）<input id="duration" type="number" min="3" max="60" step="1"></label></div>
+          <label>背景配色<select id="theme"><option value="pink">草莓格纹</option><option value="mint">薄荷手账</option><option value="lilac">香芋小票</option></select></label>
+          <div class="upload-row"><button id="upload-bg">上传自定义背景</button><button id="clear-bg" class="quiet">恢复配色背景</button></div>
+          <div class="section-label"><span>02</span><h2>今天，和谁一起</h2></div>
+          <div id="people" class="people-grid"></div>
+          <div class="section-label"><span>03</span><h2>加一点氛围</h2></div>
+          <button id="upload-music">上传背景音乐</button><button id="clear-music" class="quiet">移除音乐</button><p id="music-status" class="note">未添加背景音乐，导出为无声视频。</p>
+          <p class="note">音乐随视频一同导出；预览时仅播放画面。</p>
+          <details><summary>操作说明</summary><p class="note">先配置双方名称，再添加明细并上传商品图。出现秒数控制动画顺序，消费时间控制画面时钟。可在素材库抠图、保存透明 PNG。录制时保持本页面在前台。</p><button id="reset" class="quiet">重新载入示例</button></details>
+        </div>
+        <div id="panel-orders" class="tab-panel" hidden>
+          <div class="section-label"><span>01</span><h2>把每一笔贴进来</h2></div>
+          <div class="order-toolbar"><select id="side-filter" aria-label="查看哪一方明细"><option value="0">我的明细</option><option value="1">搭子的明细</option></select><button id="add-item" class="primary">＋ 添加一笔</button></div>
+          <p class="note">每方最多 18 笔。合计随明细自动累加。</p><div id="orders"></div>
+        </div>
+        <div id="panel-assets" class="tab-panel" hidden>
+          <div class="section-label"><span>01</span><h2>你的贴纸素材盒</h2></div>
+          <button id="upload-assets" class="primary">＋ 上传图片素材</button><p class="note">可多选 JPG、PNG、WebP。抠图后保留原图，生成一份可重复使用的透明贴纸。</p>
+          <div id="cutout-status" class="processing" hidden><span></span><button id="cancel-cutout">取消处理</button></div><div id="assets" class="asset-grid"></div>
+        </div>
+      </section>
+    </div>
+    <footer class="site-footer"><span>一张图，一笔消费，一起过的一天。</span><span><a href="./README.md">使用说明</a> · <a href="./source.zip">完整源码</a> · <a href="./LICENSE.md">AGPL-3.0</a></span></footer>
+  </main>
+  <input id="image-picker" type="file" accept="image/jpeg,image/png,image/webp" hidden>
+  <input id="assets-picker" type="file" accept="image/jpeg,image/png,image/webp" multiple hidden>
+  <input id="music-picker" type="file" accept="audio/mpeg,audio/mp3,audio/wav,audio/x-wav,audio/ogg,audio/mp4,audio/webm,audio/aac" hidden>
+  <input id="project-picker" type="file" accept=".json,application/json" hidden>
+  <div id="toast" role="status" hidden></div><div id="fatal" hidden role="alert"></div>
+</body>
+</html>
