@@ -6,7 +6,6 @@
   <link rel="stylesheet" href="./styles.css"><script type="module" src="./app.js"></script>
 </head>
 <body>
-  <header class="topbar"><a class="brand" href="./"><span class="brand-icon">m.</span><span>喵喵创作室<small>DUET STUDIO</small></span></a><div class="top-actions"><span id="save-state">准备中</span><button id="export-project" class="quiet">导出项目</button><button id="import-project" class="quiet">导入项目</button></div></header>
   <main>
     <section class="workspace-heading"><div><p class="eyebrow">MAKE A LITTLE STORY</p><h1 id="project-title"></h1><p id="project-subtitle"></p></div><span class="project-number" id="project-number"></span></section>
     <div class="workspace">
@@ -49,7 +48,6 @@
   <input id="image-picker" type="file" accept="image/jpeg,image/png,image/webp" hidden>
   <input id="assets-picker" type="file" accept="image/jpeg,image/png,image/webp" multiple hidden>
   <input id="music-picker" type="file" accept="audio/mpeg,audio/mp3,audio/wav,audio/x-wav,audio/ogg,audio/mp4,audio/webm,audio/aac" hidden>
-  <input id="project-picker" type="file" accept=".json,application/json" hidden>
   <div id="toast" role="status" hidden></div><div id="fatal" hidden role="alert"></div>
 </body>
 </html>

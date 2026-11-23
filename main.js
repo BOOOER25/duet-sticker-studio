@@ -1,7 +1,7 @@
 import {project} from './project.js';
 import {example,validate,normalize,clamp} from './core.js';
 import {imageAsset,cutout,cancelCutout,saveFile} from './media.js';
-import {openStore,pack,unpack} from './storage.js';
+import {openStore} from './storage.js';
 import {createRenderer} from './draw.js';
 import {record,recordingType} from './recorder.js';
 
@@ -55,12 +55,10 @@ function render() {
 }
 function saveDraft() {
   if(!store)return;
-  clearTimeout(saveTimer);const version=revision;$('#save-state').textContent='正在保存…';
+  clearTimeout(saveTimer);
   saveTimer=setTimeout(()=>{
     const snapshot=structuredClone(state),copy=new Map(assets);
-    saveQueue=saveQueue.catch(()=>{}).then(()=>store.put(snapshot,copy)).then(()=>{
-      if(version===revision)$('#save-state').textContent='已保存到本机';
-    }).catch(()=>{if(version===revision)$('#save-state').textContent='保存失败，请导出项目';});
+    saveQueue=saveQueue.catch(()=>{}).then(()=>store.put(snapshot,copy)).catch(()=>toast('本机自动保存失败，请先保存当前图片或视频'));
   },300);
 }
 function changed({end=false}={}) {
@@ -158,7 +156,7 @@ function play() {
 }
 function lock(locked) {
   document.body.classList.toggle('busy',locked);$('#record-badge').hidden=!locked;$('#cancel-record').hidden=!locked;
-  for(const id of ['record','play','seek','resolution','save-png','save-receipt','import-project','export-project'])$('#'+id).disabled=locked;
+  for(const id of ['record','play','seek','resolution','save-png','save-receipt'])$('#'+id).disabled=locked;
 }
 async function recordVideo() {
   if(recordController||cutoutBusy)return toast('请先等待当前处理完成');
@@ -207,7 +205,7 @@ async function loadExample() {
   records.forEach(a=>library.set(a.id,a));await replaceProject({state:next,assets:library});
 }
 async function init() {
-  document.title=project.title+' · 喵喵创作室';$('#project-title').textContent=project.title;$('#project-subtitle').textContent=project.subtitle;$('#project-number').textContent=project.variant==='receipt'?'No. 02':'No. 01';
+  document.title=project.title;$('#project-title').textContent=project.title;if($('#project-subtitle'))$('#project-subtitle').textContent=project.subtitle;$('#project-number').textContent=project.variant==='receipt'?'No. 02':'No. 01';
   $('#save-receipt').hidden=project.variant!=='receipt';
   const type=recordingType();$('#record-help').textContent=type?`录制为 ${type.startsWith('video/mp4')?'MP4':'WebM'} · 30 fps。按配置时长实时录制，请保持页面在前台。`:'当前浏览器不支持录制，可保存 PNG 或换用新版 Edge / Chrome。';
   if(!type)$('#record').disabled=true;
@@ -216,7 +214,7 @@ async function init() {
     if(saved?.state) {await replaceProject({state:normalize(saved.state),assets:new Map(saved.assets.map(a=>[a.id,a]))});toast('已恢复本机保存的项目');}
     else await loadExample();
   }catch(e){
-    $('#save-state').textContent='本机保存暂不可用';toast('自动恢复失败，可导入项目继续；'+e.message);
+    toast('本机自动恢复失败，请重新上传素材；'+e.message);
     try{await loadExample();}catch{for(const item of state.items)item.asset='';changed({end:true});sync();}
   }
   render();
@@ -264,17 +262,9 @@ $('#save-png').addEventListener('click',()=>png($('#preview'),project.id+'.png')
 $('#save-receipt').addEventListener('click',()=>png(renderer.fullReceipt(state),'双人完整小票.png').catch(e=>toast(e.message)));
 $('#record').addEventListener('click',recordVideo);
 $('#cancel-record').addEventListener('click',()=>recordController?.abort());
-$('#export-project').addEventListener('click',async()=>{
-  try{validate(state);const blob=await pack(state,assets);if(blob.size>80*1024*1024)throw new Error('项目超过 80 MB，请移除不用的素材');await saveFile(blob,project.id+'-项目.json');toast('项目已导出，包含配置和素材');}catch(e){toast(e.message);}
-});
-$('#import-project').addEventListener('click',()=>{if(cutoutBusy)return toast('请先取消或完成抠图');$('#project-picker').click();});
-$('#project-picker').addEventListener('change',async e=>{
-  const file=e.target.files[0];e.target.value='';if(!file)return;
-  try{await replaceProject(await unpack(file));toast('项目已导入并保存在本机');}catch(e){toast(e.message);}
-});
 $('#reset').addEventListener('click',async()=>{
   if(cutoutBusy)return toast('请先取消或完成抠图');
-  if(!confirm('重新载入示例会替换当前配置和素材。需要保留时，请先导出项目。'))return;
+  if(!confirm('重新载入示例会替换当前配置和素材。需要保留时，请先保存当前图片或视频。'))return;
   try{await loadExample();toast('已载入示例');}catch(e){toast(e.message);}
 });
 document.addEventListener('visibilitychange',()=>{if(document.hidden){pause();if(recordController){recordController.abort();toast('页面进入后台，录制已取消，请保持前台重试');}}});
