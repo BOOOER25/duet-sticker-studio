@@ -79,7 +79,7 @@ function syncScene() {
   }));
 }
 function syncOrders() {
-  const list=state.items.filter(x=>x.side===side);
+  const list=state.items.filter(x=>x.side===side).sort((a,b)=>a.clock.localeCompare(b.clock)||a.id.localeCompare(b.id));
   $('#side-filter').options[0].textContent=`${state.people[0].name}的明细`;
   $('#side-filter').options[1].textContent=`${state.people[1].name}的明细`;
   $('#orders').replaceChildren(...list.map((item,i)=>{
@@ -91,8 +91,7 @@ function syncOrders() {
       field(`本笔${state.unit==='元'?'消费金额':state.unit}`,item.amount,v=>edit(()=>item.amount=v),{inputmode:'decimal',maxlength:9}));
     body.append(image,info);
     const grid=node('div',{class:'field-grid'});
-    grid.append(field('出现秒数',item.at,v=>edit(()=>item.at=Number(v)),{type:'number',min:0,max:state.duration-.5,step:.1}),
-      field('消费时间',item.clock,v=>edit(()=>item.clock=v),{type:'time'}));
+    grid.append(field('消费时间',item.clock,v=>edit(()=>item.clock=v),{type:'time'}));
     const select=assetOptions(item.asset,v=>edit(()=>item.asset=v,{refresh:true}));
     const actions=node('div',{class:'order-actions'});
     actions.append(
@@ -223,8 +222,8 @@ async function init() {
 document.querySelectorAll('[data-tab]').forEach(b=>b.addEventListener('click',()=>selectTab(b.dataset.tab)));
 for(const key of ['title','footer','unit','theme'])$('#'+key).addEventListener('change',e=>edit(()=>state[key]=e.target.value,{refresh:true}));
 $('#duration').addEventListener('change',e=>edit(()=>{
-  const next=Number(e.target.value),ratio=(next-.8)/(state.duration-.8);
-  for(const item of state.items)item.at=Math.round(item.at*ratio*10)/10;
+  const next=Number(e.target.value);
+  for(const item of state.items)item.at=clamp(item.at/state.duration*next,0,next-.5);
   state.duration=next;
 },{refresh:true,end:true}));
 $('#play').addEventListener('click',play);

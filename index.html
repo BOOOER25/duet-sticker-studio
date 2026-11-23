@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
   <title>双人素材工作室</title><meta name="color-scheme" content="light">
-  <link rel="stylesheet" href="./styles.css"><script type="module" src="./app.js"></script>
+  <link rel="stylesheet" href="./styles.css"><script type="module" src="./app.js?v=803d05241003"></script>
 </head>
 <body>
   <main>
@@ -29,12 +29,12 @@
           <div class="section-label"><span>03</span><h2>加一点氛围</h2></div>
           <button id="upload-music">上传背景音乐</button><button id="clear-music" class="quiet">移除音乐</button><p id="music-status" class="note">未添加背景音乐，导出为无声视频。</p>
           <p class="note">音乐随视频一同导出；预览时仅播放画面。</p>
-          <details><summary>操作说明</summary><p class="note">先配置双方名称，再添加明细并上传商品图。出现秒数控制动画顺序，消费时间控制画面时钟。可在素材库抠图、保存透明 PNG。录制时保持本页面在前台。</p><button id="reset" class="quiet">重新载入示例</button></details>
+          <details><summary>操作说明</summary><p class="note">时钟从 07:00 逐小时推进到 23:00，没有明细的小时也会显示；有更早的消费时从该小时开始。消费时间决定入场顺序，食物从下方进入并落位，数量增多时自动平滑排成多列。可在素材库抠图、保存透明 PNG。录制时保持本页面在前台。</p><button id="reset" class="quiet">重新载入示例</button></details>
         </div>
         <div id="panel-orders" class="tab-panel" hidden>
           <div class="section-label"><span>01</span><h2>把每一笔贴进来</h2></div>
           <div class="order-toolbar"><select id="side-filter" aria-label="查看哪一方明细"><option value="0">我的明细</option><option value="1">搭子的明细</option></select><button id="add-item" class="primary">＋ 添加一笔</button></div>
-          <p class="note">每方最多 18 笔。合计随明细自动累加。</p><div id="orders"></div>
+          <p class="note">每方最多 18 笔。消费时间决定入场时刻，明细按时间排序；贴纸落位时合计同步累加。</p><div id="orders"></div>
         </div>
         <div id="panel-assets" class="tab-panel" hidden>
           <div class="section-label"><span>01</span><h2>你的贴纸素材盒</h2></div>

@@ -1,5 +1,6 @@
 import {clamp,amount,totals,visibleItems} from './core.js';
 import {project} from './project.js';
+import {stickerTimeline,stickerFrame} from './sticker-motion.js';
 const FONT='"Microsoft YaHei","PingFang SC",system-ui,sans-serif';
 const palettes={pink:['#f7d3dd','#e98da8','#fff9ed'],mint:['#cce9de','#70ad9c','#fffff6'],lilac:['#ded5f1','#9e8bc4','#fffdf7']};
 const round=(c,x,y,w,h,r,fill)=>{c.beginPath();c.roundRect(x,y,w,h,r);c.fillStyle=fill;c.fill();};
@@ -35,6 +36,8 @@ function product(c,img,item,x,y,w,h) {
 }
 export function createRenderer(bitmaps) {
   const get=id=>bitmaps.get(id);
+  let motionTimeline;
+  const motion=(s,time)=>stickerFrame(s,time,motionTimeline??=stickerTimeline(s));
   function background(c,s) {
     const [base,,paper]=palettes[s.theme]||palettes.pink;
     c.fillStyle=base;c.fillRect(0,0,540,960);
@@ -51,11 +54,10 @@ export function createRenderer(bitmaps) {
   function header(c,s,time) {
     const color=palettes[s.theme]?.[1]||'#e98da8';
     round(c,28,40,484,52,12,color);text(c,s.title,270,66,21,'white',700,'center',450);
-    const visible=visibleItems(s,time).sort((a,b)=>a.at-b.at);
-    text(c,visible.at(-1)?.clock||'07:00',270,139,42,'#252936',800,'center');
+    text(c,motion(s,time).clock,270,139,42,'#252936',800,'center');
   }
   function board(c,s,time) {
-    const sum=totals(s,time),accent=palettes[s.theme][1];
+    const frame=motion(s,time),sum=frame.totals,accent=palettes[s.theme][1];
     round(c,20,183,500,94,23,'#ffffffed');
     avatar(c,get(s.people[0].avatar),62,229,27,s.people[0].name,accent);
     avatar(c,get(s.people[1].avatar),478,229,27,s.people[1].name,'#99bdac');
@@ -64,21 +66,29 @@ export function createRenderer(bitmaps) {
     text(c,amount(sum[0],s.unit),101,242,26,'#e48b3e',800,'left',145);
     text(c,amount(sum[1],s.unit),439,242,26,'#e48b3e',800,'right',145);
     text(c,'VS',270,232,29,'#d4c6e8',800,'center');
+    frame.increments.forEach((increment,side)=>{
+      if(!increment)return;
+      c.save();c.globalAlpha=Math.min(1,(1-increment.progress)*2.5);
+      text(c,'+'+amount(increment.amount,s.unit),side?430:111,266-increment.progress*13,11,'#d99548',700,side?'right':'left',130);
+      c.restore();
+    });
     [0,1].forEach(side=>{
       const x=20+side*258;round(c,x,288,242,588,20,'#fffffff0');
       c.fillStyle='#d7d2dc';
       for(let row=0;row<24;row++)for(let col=0;col<10;col++){c.beginPath();c.arc(x+13+col*24,300+row*24,.6,0,7);c.fill();}
-      const all=s.items.filter(it=>it.side===side).sort((a,b)=>a.at-b.at);
-      all.forEach((item,i)=>{
-        if(item.at>time)return;
-        const age=clamp((time-item.at)/.32,0,1),pop=1-Math.pow(1-age,3);
-        const px=x+5+(i%3)*78,py=296+Math.floor(i/3)*95;
-        c.save();c.globalAlpha=pop;c.translate(px+39,py+42);c.scale(.8+.2*pop,.8+.2*pop);c.translate(-39,-42);
-        product(c,get(item.asset),item,0,0,78,68);
-        round(c,25,0,51,17,5,'#fffdf4');text(c,amount(item.amount,s.unit),50,9,9,'#574d43',700,'center',49);
-        text(c,item.name,39,77,10,'#66606a',500,'center',74);
+      c.save();c.beginPath();c.roundRect(x,288,242,588,20);c.clip();
+      frame.stickers.filter(pose=>pose.item.side===side).forEach(pose=>{
+        const {item,size}=pose;
+        c.save();c.globalAlpha=pose.alpha;c.translate(pose.x,pose.y);c.rotate(pose.angle);c.scale(pose.scale,pose.scale);
+        product(c,get(item.asset),item,-size/2,-size/2,size,size);
+        c.globalAlpha*=pose.labelAlpha;
+        const tagWidth=size*.65,tagHeight=Math.max(16,size*.18);
+        round(c,size/2-tagWidth,-size*.44,tagWidth,tagHeight,5,'#fffdf4');
+        text(c,amount(item.amount,s.unit),size/2-tagWidth/2,-size*.44+tagHeight/2,Math.max(9,size*.11),'#574d43',700,'center',tagWidth-4);
+        text(c,item.name,0,size/2+12,Math.max(10,size*.105),'#66606a',500,'center',size+6);
         c.restore();
       });
+      c.restore();
     });
     text(c,s.footer,270,918,14,'#69606e',500,'center',472);
   }
@@ -157,7 +167,7 @@ export function createRenderer(bitmaps) {
     text(c,'喵喵记账 · 今日小票',270,929,14,'#786b87',600,'center');
   }
   return {
-    invalidate(){receiptKey='';cachedReceipt=null;},
+    invalidate(){receiptKey='';cachedReceipt=null;motionTimeline=null;},
     draw(canvas,s,time){
       const c=canvas.getContext('2d');c.setTransform(canvas.width/540,0,0,canvas.height/960,0,0);
       c.clearRect(0,0,540,960);background(c,s);header(c,s,time);
